@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
 import { RoomManager } from './rooms/RoomManager';
 import { GameEngine } from './game/GameEngine';
 import { GameState } from './types';
@@ -29,9 +30,18 @@ const roomManager = new RoomManager();
 // Map socketId → { roomId, playerId }
 const socketMap = new Map<string, { roomId: string; playerId: string }>();
 
+// Serve built React client
+const clientDist = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDist));
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// SPA fallback — must come after /health and before socket.io
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 // Helper: emit error to a socket
