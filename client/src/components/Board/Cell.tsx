@@ -51,10 +51,29 @@ interface CellProps {
   onClick: (cellId: string) => void;
 }
 
+// 未所有セルのゾーン背景色（コストの主要リソースで決定）
+function zoneBg(cost: ResourceCost): string {
+  if (cost.gold) return 'bg-yellow-50';       // 金貨混入 = 中央高級地帯
+  if (cost.wood && cost.stone) return 'bg-orange-50'; // 右下混合
+  if (cost.wood) return 'bg-lime-50';         // 木材ゾーン
+  if (cost.stone) return 'bg-slate-100';      // 石材ゾーン
+  if (cost.food) return 'bg-green-50';        // 食料ゾーン
+  return 'bg-amber-50';
+}
+
+function zoneBorder(cost: ResourceCost): string {
+  if (cost.gold) return 'border-yellow-300';
+  if (cost.wood && cost.stone) return 'border-orange-300';
+  if (cost.wood) return 'border-lime-300';
+  if (cost.stone) return 'border-slate-300';
+  if (cost.food) return 'border-green-300';
+  return 'border-amber-200';
+}
+
 export function Cell({ cell, ownerIndex, isSelected, isClickable, onClick }: CellProps) {
-  const ownerBg = ownerIndex !== null ? PLAYER_COLORS[ownerIndex % 8] : 'bg-amber-50';
+  const ownerBg = ownerIndex !== null ? PLAYER_COLORS[ownerIndex % 8] : zoneBg(cell.cost);
   const ownerBorder =
-    ownerIndex !== null ? PLAYER_BORDER_COLORS[ownerIndex % 8] : 'border-amber-200';
+    ownerIndex !== null ? PLAYER_BORDER_COLORS[ownerIndex % 8] : zoneBorder(cell.cost);
 
   return (
     <button

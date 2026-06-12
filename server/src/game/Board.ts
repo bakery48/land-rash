@@ -4,40 +4,68 @@ import { Cell, Resource, ResourceCost } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { nanoid } = require('nanoid') as { nanoid: (size?: number) => string };
 
-const RESOURCE_TYPES: Resource[] = ['wood', 'stone', 'food', 'gold'];
+/**
+ * ゾーン制コスト設計
+ *
+ * 盤面を4象限に分け、位置によって主要リソースが決まる。
+ *   左上 → 🪵木材ゾーン
+ *   右上 → 🪨石材ゾーン
+ *   左下 → 🌾食料ゾーン
+ *   右下 → 混合（木材+石材、高コスト）
+ *
+ * コスト量は中心距離で決まる（端=安い, 中央=高い）。
+ * 中央付近のマスは 💰金貨 コストが混入してより高価になる。
+ */
+function zoneResource(row: number, col: number, size: number): Resource {
+  const mid = (size - 1) / 2;
+  const top = row < mid;
+  const left = col < mid;
 
-function randomResource(): Resource {
-  return RESOURCE_TYPES[Math.floor(Math.random() * (RESOURCE_TYPES.length - 1))]; // exclude gold for random cost
+  if (top && left) return 'wood';
+  if (top && !left) return 'stone';
+  if (!top && left) return 'food';
+  // 右下: 木材+石材の混合ゾーン（後でコスト構築時に2種使う）
+  return 'wood';
 }
 
 function buildCellCost(row: number, col: number, size: number): ResourceCost {
   const maxIdx = size - 1;
-  const isCorner =
-    (row === 0 || row === maxIdx) && (col === 0 || col === maxIdx);
-  const isEdge =
-    !isCorner && (row === 0 || row === maxIdx || col === 0 || col === maxIdx);
-  // isCenter = !isCorner && !isEdge
+  const mid = (size - 1) / 2;
 
+  // 中心からのチェビシェフ距離（0=中央, 大=端）
+  const distFromCenter = Math.max(Math.abs(row - mid), Math.abs(col - mid));
+  const maxDist = mid;
+  // 端ほど安い（cost tier: 1=安, 2=中, 3=高）
+  const tier = distFromCenter >= maxDist * 0.8 ? 1
+    : distFromCenter >= maxDist * 0.4 ? 2
+    : 3;
+
+  const isBottomRight = row > mid && col > mid;
+  const primary = zoneResource(row, col, size);
   const cost: ResourceCost = {};
 
-  if (isCorner) {
-    // cheapest: 1 resource of one type
-    const r = randomResource();
-    cost[r] = 1;
-  } else if (isEdge) {
-    // medium: 1-2 resources of one or two types
-    const r1 = randomResource();
-    cost[r1] = (cost[r1] ?? 0) + 1;
-    if (Math.random() < 0.5) {
-      const r2 = randomResource();
-      cost[r2] = (cost[r2] ?? 0) + 1;
+  if (tier === 1) {
+    // 端・コーナー: 主要リソース1枚
+    cost[primary] = 1;
+  } else if (tier === 2) {
+    // 中間: 主要リソース2枚 or 1枚+食料1枚
+    cost[primary] = 2;
+    if (isBottomRight) {
+      // 右下ゾーンは木材1+石材1
+      cost['wood'] = 1;
+      cost['stone'] = 1;
     }
   } else {
-    // center: 2 resources, possibly two types
-    const r1 = randomResource();
-    cost[r1] = (cost[r1] ?? 0) + 1;
-    const r2 = randomResource();
-    cost[r2] = (cost[r2] ?? 0) + 1;
+    // 中央: 高コスト。金貨が絡むか2種類
+    if (isBottomRight) {
+      // 右下中央: 木材2+石材1（最高コスト）
+      cost['wood'] = 2;
+      cost['stone'] = 1;
+    } else {
+      // 各ゾーン中央: 主要リソース2+金貨1
+      cost[primary] = 2;
+      cost['gold'] = 1;
+    }
   }
 
   return cost;
