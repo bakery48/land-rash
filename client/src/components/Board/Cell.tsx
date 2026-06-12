@@ -29,14 +29,14 @@ function CostBadge({ cost }: { cost: ResourceCost }) {
   if (cost.food) icons.push({ icon: '🌾', count: cost.food });
   if (cost.gold) icons.push({ icon: '💰', count: cost.gold });
 
-  if (icons.length === 0) return <span className="text-[9px] text-amber-400">無料</span>;
+  if (icons.length === 0) return <span className="text-[10px] text-amber-400">無料</span>;
 
   return (
     <div className="flex flex-wrap gap-0.5 justify-center">
       {icons.map(({ icon, count }) => (
-        <span key={icon} className="text-xs leading-none">
+        <span key={icon} className="text-sm leading-none">
           {icon}
-          {count > 1 && <sup className="text-[8px] font-bold">{count}</sup>}
+          {count > 1 && <sup className="text-[9px] font-bold">{count}</sup>}
         </span>
       ))}
     </div>
@@ -62,7 +62,7 @@ export function Cell({ cell, ownerIndex, isSelected, isClickable, onClick }: Cel
       disabled={!isClickable}
       title={`(${cell.row},${cell.col})`}
       className={[
-        'relative w-full aspect-square rounded-md border-2 flex flex-col items-center justify-center gap-0.5 transition-all duration-150 text-center overflow-hidden',
+        'relative w-full rounded-md border-2 flex flex-col items-center justify-center gap-1 transition-all duration-150 text-center overflow-hidden min-h-[72px]',
         `${ownerBg} ${ownerBorder}`,
         isSelected ? 'ring-2 ring-offset-1 ring-amber-500 scale-105 z-10 shadow-lg' : '',
         isClickable
@@ -73,12 +73,17 @@ export function Cell({ cell, ownerIndex, isSelected, isClickable, onClick }: Cel
         .join(' ')}
     >
       {/* Owner Flag */}
-      {ownerIndex !== null && <span className="text-xs leading-none">🏴</span>}
+      {ownerIndex !== null && <span className="text-lg leading-none">🏴</span>}
 
       {/* Cost */}
-      <div className="w-full px-0.5">
+      <div className="w-full px-1">
         <CostBadge cost={cell.cost} />
       </div>
+
+      {/* Cell coordinate */}
+      <span className="absolute bottom-0.5 right-1 text-[9px] text-gray-300 font-mono leading-none">
+        {cell.row},{cell.col}
+      </span>
     </button>
   );
 }
