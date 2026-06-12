@@ -7,6 +7,7 @@ import { Hand } from '../Hand/Hand';
 import { ObjectiveCards } from '../ObjectiveCards/ObjectiveCards';
 import { ScoreBoard } from '../ScoreBoard/ScoreBoard';
 import { PhaseEventModal } from './PhaseEventModal';
+import { RuleBook } from './RuleBook';
 import { Resource } from '../../types';
 
 const RESOURCE_ICONS: Record<Resource, string> = {
@@ -184,6 +185,7 @@ export function GameBoard() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <RuleBook />
             <span className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
               {TURN_STEP_LABELS[gameState.step] ?? gameState.step}
             </span>
