@@ -13,7 +13,6 @@ export function RoomWaiting() {
   const playerCount = room.players.length;
   const maxPlayers = room.maxPlayers ?? 8;
   const canStart = playerCount >= 3;
-  // room.id is the 6-char room code
   const roomCode = room.id;
 
   const handleCopyCode = () => {
@@ -40,7 +39,7 @@ export function RoomWaiting() {
             onClick={handleCopyCode}
             className="w-full bg-amber-50 hover:bg-amber-100 border-2 border-dashed border-amber-300 rounded-xl py-4 transition-colors"
           >
-            <span className="text-3xl font-mono font-bold text-amber-800 tracking-widest">
+            <span className="text-5xl font-mono font-bold text-amber-800 tracking-widest">
               {roomCode}
             </span>
             <p className="text-xs text-amber-500 mt-1">

@@ -28,10 +28,8 @@ export function Lobby() {
 
   const handleJoin = () => {
     if (!validateName()) return;
-    if (roomCode.length !== 6) {
-      return;
-    }
-    joinRoom(playerName.trim(), roomCode.toUpperCase());
+    if (!/^\d{2}$/.test(roomCode)) return;
+    joinRoom(playerName.trim(), roomCode);
   };
 
   return (
@@ -96,23 +94,24 @@ export function Lobby() {
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={roomCode}
                   onChange={(e) =>
-                    setRoomCode(e.target.value.toUpperCase().slice(0, 6))
+                    setRoomCode(e.target.value.replace(/\D/g, '').slice(0, 2))
                   }
                   onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
-                  placeholder="XXXXXX"
-                  maxLength={6}
-                  className="w-full border-2 border-amber-200 rounded-lg px-4 py-2.5 text-amber-900 placeholder-amber-300 focus:outline-none focus:border-amber-500 transition-colors text-center text-xl font-mono tracking-widest uppercase"
+                  placeholder="00"
+                  maxLength={2}
+                  className="w-full border-2 border-amber-200 rounded-lg px-4 py-2.5 text-amber-900 placeholder-amber-300 focus:outline-none focus:border-amber-500 transition-colors text-center text-3xl font-mono tracking-widest"
                 />
                 <p className="text-amber-500 text-xs mt-1 text-center">
-                  6文字のコードを入力してください
+                  2桁の数字を入力してください
                 </p>
               </div>
               <div className="space-y-3">
                 <button
                   onClick={handleJoin}
-                  disabled={roomCode.length !== 6}
+                  disabled={!/^\d{2}$/.test(roomCode)}
                   className="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 disabled:bg-amber-200 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-sm"
                 >
                   参加する

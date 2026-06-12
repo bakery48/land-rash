@@ -6,12 +6,7 @@ import { GameEngine } from '../game/GameEngine';
 const { nanoid } = require('nanoid') as { nanoid: (size?: number) => string };
 
 function generateRoomCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
+  return String(Math.floor(Math.random() * 90) + 10); // "10"〜"99"
 }
 
 export class RoomManager {
