@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-amber-50 text-amber-900;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+.card-hover {
+  @apply transition-transform duration-150 hover:-translate-y-1;
+}
+
+.cell-owned {
+  @apply ring-2 ring-inset;
+}

@@ -1,16 +1,8 @@
 export type Resource = 'wood' | 'stone' | 'food' | 'gold';
 
-export type CardType = 'territory' | 'sabotage' | 'boost' | 'abundance' | 'steal';
+export type CardType = 'territory' | 'sabotage' | 'boost' | 'abundance' | 'steal' | 'resource';
 
-export type PhaseEventType =
-  | 'drought'
-  | 'gold_rush'
-  | 'lumber_boom'
-  | 'stone_age'
-  | 'feast'
-  | 'sabotage_wave'
-  | 'land_grab'
-  | 'resource_drain';
+export type PhaseEventType = 'harvest' | 'contest' | 'storm' | 'trade' | 'peace';
 
 export type TurnStep = 'draw' | 'take_resource' | 'action' | 'end';
 
@@ -22,68 +14,81 @@ export interface Cell {
   col: number;
   owner: string | null;
   cost: ResourceCost;
-  value: number;
-  terrain: 'plains' | 'forest' | 'mountain' | 'river' | 'coast';
-  boosted: boolean;
 }
 
 export interface Card {
   id: string;
   type: CardType;
-  name: string;
-  description: string;
-  cost: ResourceCost;
+  resource?: Resource;
+  name?: string;
+  description?: string;
+  targetCell?: string;
   effect?: Record<string, unknown>;
+}
+
+export interface ObjectiveCondition {
+  type: 'resource_combo' | 'consecutive' | 'multi_acquire';
+  params: Record<string, unknown>;
 }
 
 export interface ObjectiveCard {
   id: string;
-  name: string;
   description: string;
-  condition: string;
   points: number;
+  achieved: boolean;
   achievedBy: string | null;
+  condition: ObjectiveCondition;
 }
 
 export interface PhaseEvent {
   type: PhaseEventType;
-  name: string;
   description: string;
-  effect: Record<string, unknown>;
-  activatedAt: number;
 }
 
 export interface Player {
   id: string;
   name: string;
-  resources: Record<Resource, number>;
   hand: Card[];
-  territories: string[];
+  resources: Resource[];
   score: number;
   connected: boolean;
-  isHost: boolean;
+  boostNextTurn: boolean;
+  territoriesThisPhase: number;
+  isHost?: boolean;
 }
 
 export interface GameState {
+  roomId: string;
   phase: number;
   round: number;
-  turnIndex: number;
-  turnStep: TurnStep;
+  activePlayerId: string;
+  step: TurnStep;
   players: Player[];
   board: Cell[][];
-  resourcePool: (Resource | null)[];
-  deck: number;
+  resourcePool: Card[];
+  resourceDeck: Card[];
+  handDeck: Card[];
+  playerOrder: string[];
   objectives: ObjectiveCard[];
+  phaseEvents: PhaseEvent[];
   currentPhaseEvent: PhaseEvent | null;
+  peaceActive: boolean;
+  contestActive: boolean;
   winner: string | null;
-  takenResourcesThisTurn: number;
+  gameOver: boolean;
 }
 
 export interface Room {
   id: string;
-  code: string;
   hostId: string;
-  players: { id: string; name: string; isHost: boolean }[];
-  gameStarted: boolean;
-  maxPlayers: number;
+  players: { id: string; name: string }[];
+  gameState: GameState | null;
+  status: 'waiting' | 'playing' | 'finished';
+  maxPlayers?: number;
+}
+
+export interface Toast {
+  id: string;
+  message: string;
+  type: 'error' | 'info' | 'success';
 }
