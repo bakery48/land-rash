@@ -38,15 +38,20 @@ export function useSocket() {
       addToast('サーバーから切断されました', 'error');
     });
 
-    socket.on('room:created', (data: { room: Room; playerId: string; playerName: string }) => {
+    // Server sends: { roomId, room, playerId }
+    socket.on('room:created', (data: { room: Room; playerId: string; roomId: string }) => {
       setRoom(data.room);
-      setMyPlayer(data.playerId, data.playerName);
+      // Store the player name from the room player list
+      const playerInfo = data.room.players.find((p) => p.id === data.playerId);
+      setMyPlayer(data.playerId, playerInfo?.name ?? '');
       setPhase('room');
     });
 
-    socket.on('room:joined', (data: { room: Room; playerId: string; playerName: string }) => {
+    // Server sends: { room, playerId }
+    socket.on('room:joined', (data: { room: Room; playerId: string }) => {
       setRoom(data.room);
-      setMyPlayer(data.playerId, data.playerName);
+      const playerInfo = data.room.players.find((p) => p.id === data.playerId);
+      setMyPlayer(data.playerId, playerInfo?.name ?? '');
       setPhase('room');
     });
 
@@ -54,27 +59,32 @@ export function useSocket() {
       setRoom(data.room);
     });
 
-    socket.on('room:left', () => {
-      setRoom(null);
-      setGameState(null);
-      setPhase('lobby');
-    });
-
-    socket.on('game:started', (data: { gameState: GameState }) => {
-      setGameState(data.gameState);
+    // Server sends: { state } on game:started
+    socket.on('game:started', (data: { state: GameState }) => {
+      setGameState(data.state);
       setPhase('game');
       addToast('ゲームが始まりました！', 'success');
     });
 
-    socket.on('state:update', (data: { gameState: GameState }) => {
-      setGameState(data.gameState);
-      if (data.gameState.winner) {
+    // Server sends: { state } on state:update
+    socket.on('state:update', (data: { state: GameState }) => {
+      setGameState(data.state);
+      if (data.state.winner) {
         setPhase('result');
       }
     });
 
-    socket.on('phase:event', (data: { event: { name: string; description: string } }) => {
-      addToast(`フェーズイベント: ${data.event.name}`, 'warning');
+    socket.on('game:over', (data: { winner: string | null }) => {
+      if (data.winner) {
+        addToast(`ゲーム終了！勝者: ${data.winner}`, 'success');
+      }
+      setPhase('result');
+    });
+
+    socket.on('game:reconnected', (data: { state: GameState; playerId: string }) => {
+      setGameState(data.state);
+      setPhase('game');
+      addToast('ゲームに再接続しました', 'success');
     });
 
     socket.on('error', (data: { message: string }) => {
@@ -87,20 +97,22 @@ export function useSocket() {
       socket.off('room:created');
       socket.off('room:joined');
       socket.off('room:updated');
-      socket.off('room:left');
       socket.off('game:started');
       socket.off('state:update');
-      socket.off('phase:event');
+      socket.off('game:over');
+      socket.off('game:reconnected');
       socket.off('error');
     };
   }, [setGameState, setRoom, setMyPlayer, setPhase, addToast]);
 
+  // Server expects: { name }
   const createRoom = useCallback((playerName: string) => {
-    socketRef.current?.emit('room:create', { playerName });
+    socketRef.current?.emit('room:create', { name: playerName });
   }, []);
 
-  const joinRoom = useCallback((code: string, playerName: string) => {
-    socketRef.current?.emit('room:join', { code, playerName });
+  // Server expects: { roomId, name }
+  const joinRoom = useCallback((name: string, roomId: string) => {
+    socketRef.current?.emit('room:join', { roomId, name });
   }, []);
 
   const leaveRoom = useCallback(() => {
@@ -115,8 +127,13 @@ export function useSocket() {
     socketRef.current?.emit('turn:draw');
   }, []);
 
-  const takeResource = useCallback((index: number) => {
-    socketRef.current?.emit('turn:take_resource', { index });
+  // Server expects: { cardId } or { skip: true }
+  const takeResource = useCallback((cardId: string) => {
+    socketRef.current?.emit('turn:take_resource', { cardId });
+  }, []);
+
+  const skipTakeResource = useCallback(() => {
+    socketRef.current?.emit('turn:take_resource', { skip: true });
   }, []);
 
   const performAction = useCallback(
@@ -132,8 +149,7 @@ export function useSocket() {
   const isMyTurn = useCallback(
     (gameState: GameState | null): boolean => {
       if (!gameState || !myPlayerId) return false;
-      const activePlayer = gameState.players[gameState.turnIndex];
-      return activePlayer?.id === myPlayerId;
+      return gameState.activePlayerId === myPlayerId;
     },
     [myPlayerId]
   );
@@ -146,6 +162,7 @@ export function useSocket() {
     startGame,
     drawCard,
     takeResource,
+    skipTakeResource,
     performAction,
     isMyTurn,
   };

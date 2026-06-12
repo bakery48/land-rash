@@ -13,20 +13,21 @@ const PLAYER_COLORS: Record<number, string> = {
 
 interface ScoreBoardProps {
   players: Player[];
-  currentPlayerIndex: number;
+  activePlayerId: string;
   myPlayerId: string | null;
   phase: number;
   round: number;
-  maxRounds: number;
+  // territoryCounts: player id → number of owned cells (computed from board)
+  territoryCounts: Record<string, number>;
 }
 
 export function ScoreBoard({
   players,
-  currentPlayerIndex,
+  activePlayerId,
   myPlayerId,
   phase,
   round,
-  maxRounds,
+  territoryCounts,
 }: ScoreBoardProps) {
   const sorted = [...players].sort((a, b) => b.score - a.score);
 
@@ -37,15 +38,16 @@ export function ScoreBoard({
           <span>🏆</span> スコア
         </h3>
         <span className="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-          フェーズ {phase} / ラウンド {round}/{maxRounds}
+          フェーズ {phase} / ラウンド {round}
         </span>
       </div>
 
       <div className="space-y-1.5">
         {sorted.map((player, rank) => {
           const originalIndex = players.findIndex((p) => p.id === player.id);
-          const isCurrentTurn = originalIndex === currentPlayerIndex;
+          const isCurrentTurn = player.id === activePlayerId;
           const isMe = player.id === myPlayerId;
+          const terrCount = territoryCounts[player.id] ?? 0;
 
           return (
             <div
@@ -92,7 +94,7 @@ export function ScoreBoard({
 
               {/* Territory count */}
               <span className="text-[10px] text-gray-500 flex-shrink-0">
-                🏴{player.territories.length}
+                🏴{terrCount}
               </span>
 
               {/* Score */}
