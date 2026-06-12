@@ -32,9 +32,6 @@ export function ObjectiveCards({ objectives, players }: ObjectiveCardsProps) {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-amber-900 text-xs leading-snug">
-                  {obj.name}
-                </p>
-                <p className="text-[11px] text-amber-700 mt-0.5 leading-snug">
                   {obj.description}
                 </p>
                 {obj.achievedBy && (

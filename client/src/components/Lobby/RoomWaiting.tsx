@@ -11,10 +11,13 @@ export function RoomWaiting() {
 
   const isHost = room.hostId === myPlayerId;
   const playerCount = room.players.length;
+  const maxPlayers = room.maxPlayers ?? 8;
   const canStart = playerCount >= 3;
+  // room.id is the 6-char room code
+  const roomCode = room.id;
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(room.code).then(() => {
+    navigator.clipboard.writeText(roomCode).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -35,10 +38,10 @@ export function RoomWaiting() {
           <p className="text-sm font-semibold text-amber-700 text-center mb-2">ルームコード</p>
           <button
             onClick={handleCopyCode}
-            className="w-full bg-amber-50 hover:bg-amber-100 border-2 border-dashed border-amber-300 rounded-xl py-4 transition-colors group"
+            className="w-full bg-amber-50 hover:bg-amber-100 border-2 border-dashed border-amber-300 rounded-xl py-4 transition-colors"
           >
             <span className="text-3xl font-mono font-bold text-amber-800 tracking-widest">
-              {room.code}
+              {roomCode}
             </span>
             <p className="text-xs text-amber-500 mt-1">
               {copied ? '✅ コピーしました！' : '📋 クリックしてコピー'}
@@ -54,35 +57,42 @@ export function RoomWaiting() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-amber-900">参加者</h2>
             <span className="text-sm font-semibold text-amber-600 bg-amber-100 px-3 py-1 rounded-full">
-              {playerCount}人 / {room.maxPlayers}人
+              {playerCount}人 / {maxPlayers}人
             </span>
           </div>
 
           <div className="space-y-2">
-            {room.players.map((player, index) => (
-              <div
-                key={player.id}
-                className="flex items-center gap-3 bg-amber-50 rounded-lg px-3 py-2.5"
-              >
-                <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-sm font-bold text-amber-800">
-                  {index + 1}
+            {room.players.map((player, index) => {
+              const isPlayerHost = player.id === room.hostId;
+              const isMe = player.id === myPlayerId;
+              return (
+                <div
+                  key={player.id}
+                  className="flex items-center gap-3 bg-amber-50 rounded-lg px-3 py-2.5"
+                >
+                  <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-sm font-bold text-amber-800">
+                    {index + 1}
+                  </div>
+                  <span className="flex-1 font-medium text-amber-900">
+                    {isPlayerHost && <span className="mr-1">👑</span>}
+                    {player.name}
+                  </span>
+                  {isPlayerHost && (
+                    <span className="text-xs bg-amber-400 text-white px-2 py-0.5 rounded-full font-semibold">
+                      ホスト
+                    </span>
+                  )}
+                  {isMe && !isPlayerHost && (
+                    <span className="text-xs bg-green-400 text-white px-2 py-0.5 rounded-full font-semibold">
+                      あなた
+                    </span>
+                  )}
                 </div>
-                <span className="flex-1 font-medium text-amber-900">{player.name}</span>
-                {player.isHost && (
-                  <span className="text-xs bg-amber-400 text-white px-2 py-0.5 rounded-full font-semibold">
-                    ホスト
-                  </span>
-                )}
-                {player.id === myPlayerId && !player.isHost && (
-                  <span className="text-xs bg-green-400 text-white px-2 py-0.5 rounded-full font-semibold">
-                    あなた
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Waiting slots */}
+          {/* Waiting slots (show at least 3 total slots) */}
           {Array.from({ length: Math.max(0, 3 - playerCount) }).map((_, i) => (
             <div
               key={`empty-${i}`}
@@ -102,9 +112,11 @@ export function RoomWaiting() {
             <button
               onClick={startGame}
               disabled={!canStart}
-              className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm text-lg"
+              className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm text-lg"
             >
-              {canStart ? '⚔️ ゲーム開始' : `⚔️ ゲーム開始（あと${3 - playerCount}人必要）`}
+              {canStart
+                ? '⚔️ ゲーム開始'
+                : `⚔️ ゲーム開始（あと${3 - playerCount}人必要）`}
             </button>
           )}
           {!isHost && (

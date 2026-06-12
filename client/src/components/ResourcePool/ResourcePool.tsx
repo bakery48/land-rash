@@ -1,20 +1,20 @@
-import { Resource } from '../../types';
+import { Card, Resource } from '../../types';
 
-const RESOURCE_ICONS: Record<Resource, string> = {
+const RESOURCE_ICONS: Record<string, string> = {
   wood: '🪵',
   stone: '🪨',
   food: '🌾',
   gold: '💰',
 };
 
-const RESOURCE_NAMES: Record<Resource, string> = {
+const RESOURCE_NAMES: Record<string, string> = {
   wood: '木材',
   stone: '石材',
   food: '食料',
   gold: '金貨',
 };
 
-const RESOURCE_COLORS: Record<Resource, string> = {
+const RESOURCE_COLORS: Record<string, string> = {
   wood: 'bg-lime-100 border-lime-300 text-lime-800',
   stone: 'bg-gray-100 border-gray-300 text-gray-700',
   food: 'bg-green-100 border-green-300 text-green-800',
@@ -22,13 +22,15 @@ const RESOURCE_COLORS: Record<Resource, string> = {
 };
 
 interface ResourcePoolProps {
-  pool: (Resource | null)[];
+  // Server sends Card[] where each card has type='resource' and resource field
+  pool: Card[];
   isMyTurn: boolean;
   turnStep: string;
-  onTakeResource: (index: number) => void;
+  onTakeResource: (cardId: string) => void;
+  onSkip: () => void;
 }
 
-export function ResourcePool({ pool, isMyTurn, turnStep, onTakeResource }: ResourcePoolProps) {
+export function ResourcePool({ pool, isMyTurn, turnStep, onTakeResource, onSkip }: ResourcePoolProps) {
   const isClickable = isMyTurn && turnStep === 'take_resource';
 
   return (
@@ -36,29 +38,27 @@ export function ResourcePool({ pool, isMyTurn, turnStep, onTakeResource }: Resou
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-amber-900 text-sm">リソースプール</h3>
         <span className="text-xs text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">
-          {pool.filter(Boolean).length} / {pool.length}
+          {pool.length} 枚
         </span>
       </div>
 
       <div className="grid grid-cols-5 gap-2">
-        {pool.map((resource, index) => {
-          const clickable = isClickable && resource !== null;
+        {pool.map((card, index) => {
+          const resource = card.resource as Resource | undefined;
+          const clickable = isClickable && !!resource;
+          const colorClass = resource ? (RESOURCE_COLORS[resource] ?? 'bg-amber-50 border-amber-200') : 'bg-gray-50 border-gray-200 opacity-40';
+
           return (
             <button
-              key={index}
-              onClick={() => clickable && onTakeResource(index)}
+              key={card.id ?? index}
+              onClick={() => clickable && resource && onTakeResource(card.id)}
               disabled={!clickable}
               className={[
                 'relative flex flex-col items-center justify-center rounded-lg border-2 py-2 px-1 gap-1 transition-all duration-150 aspect-square',
-                resource
-                  ? RESOURCE_COLORS[resource]
-                  : 'bg-gray-50 border-gray-200 opacity-40',
+                colorClass,
                 clickable
-                  ? 'hover:scale-105 hover:shadow-md cursor-pointer ring-0 hover:ring-2 hover:ring-amber-400 hover:ring-offset-1'
+                  ? 'hover:scale-105 hover:shadow-md cursor-pointer hover:ring-2 hover:ring-amber-400 hover:ring-offset-1'
                   : 'cursor-default',
-                isClickable && resource
-                  ? 'animate-pulse-slow shadow-sm'
-                  : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
@@ -80,12 +80,29 @@ export function ResourcePool({ pool, isMyTurn, turnStep, onTakeResource }: Resou
             </button>
           );
         })}
+        {/* Pad to 5 slots if fewer cards */}
+        {Array.from({ length: Math.max(0, 5 - pool.length) }).map((_, i) => (
+          <div
+            key={`empty-${i}`}
+            className="flex flex-col items-center justify-center rounded-lg border-2 bg-gray-50 border-gray-200 opacity-30 aspect-square"
+          >
+            <span className="text-gray-300 text-lg">—</span>
+          </div>
+        ))}
       </div>
 
       {isClickable && (
-        <p className="text-xs text-amber-600 text-center mt-2 font-medium animate-pulse">
-          リソースを1つ取得してください
-        </p>
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-xs text-amber-600 font-medium animate-pulse">
+            リソースを1つ取得してください
+          </p>
+          <button
+            onClick={onSkip}
+            className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+          >
+            スキップ
+          </button>
+        </div>
       )}
       {isMyTurn && turnStep !== 'take_resource' && turnStep !== 'draw' && (
         <p className="text-xs text-gray-400 text-center mt-2">

@@ -10,29 +10,32 @@ const MEDAL = ['🥇', '🥈', '🥉'];
 interface ResultScreenProps {
   players: Player[];
   myPlayerId: string | null;
+  territoryCounts: Record<string, number>;
   onPlayAgain: () => void;
 }
 
-export function ResultScreen({ players, myPlayerId, onPlayAgain }: ResultScreenProps) {
+export function ResultScreen({ players, myPlayerId, territoryCounts, onPlayAgain }: ResultScreenProps) {
   const sorted = [...players].sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    return b.territories.length - a.territories.length;
+    return (territoryCounts[b.id] ?? 0) - (territoryCounts[a.id] ?? 0);
   });
 
   const winner = sorted[0];
   const isIWon = winner?.id === myPlayerId;
 
   return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
         <div className="text-center mb-6">
-          <div className="text-6xl mb-3">{isIWon ? '🎉' : '🏝️'}</div>
-          <h1 className="text-2xl font-bold text-amber-900">
-            {isIWon ? 'あなたの勝利！' : 'ゲーム終了'}
-          </h1>
-          {!isIWon && winner && (
-            <p className="text-amber-600 mt-1 text-sm">
-              <span className="font-bold">{winner.name}</span> の勝利！
+          <div className="text-6xl mb-3">{isIWon ? '🎉' : '🏆'}</div>
+          <h1 className="text-3xl font-bold text-amber-900 mb-1">ゲーム終了！</h1>
+          {winner && (
+            <p className="text-amber-600 mt-1 text-base">
+              {isIWon ? 'あなたの勝利！' : (
+                <>
+                  <span className="font-bold">{winner.name}</span> の勝利！
+                </>
+              )}
             </p>
           )}
         </div>
@@ -41,6 +44,7 @@ export function ResultScreen({ players, myPlayerId, onPlayAgain }: ResultScreenP
           {sorted.map((player, rank) => {
             const originalIndex = players.findIndex((p) => p.id === player.id);
             const isMe = player.id === myPlayerId;
+            const terrCount = territoryCounts[player.id] ?? 0;
 
             return (
               <div
@@ -59,15 +63,15 @@ export function ResultScreen({ players, myPlayerId, onPlayAgain }: ResultScreenP
                 />
                 <span
                   className={`flex-1 text-sm font-medium ${
-                    rank === 0 ? 'text-amber-900' : 'text-gray-700'
+                    rank === 0 ? 'text-amber-900 font-bold' : 'text-gray-700'
                   }`}
                 >
                   {player.name}
                   {isMe && <span className="ml-1 text-xs text-amber-500">(あなた)</span>}
                 </span>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-sm font-bold text-amber-800">{player.score}pt</div>
-                  <div className="text-xs text-gray-400">🏴{player.territories.length}</div>
+                  <div className="text-sm font-bold text-amber-800">{player.score}点</div>
+                  <div className="text-xs text-gray-400">🏴 {terrCount}領土</div>
                 </div>
               </div>
             );
@@ -76,7 +80,7 @@ export function ResultScreen({ players, myPlayerId, onPlayAgain }: ResultScreenP
 
         <button
           onClick={onPlayAgain}
-          className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors"
+          className="w-full py-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-xl transition-colors text-lg"
         >
           もう一度遊ぶ
         </button>

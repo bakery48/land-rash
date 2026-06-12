@@ -31,7 +31,7 @@ export function Lobby() {
     if (roomCode.length !== 6) {
       return;
     }
-    joinRoom(roomCode.toUpperCase(), playerName.trim());
+    joinRoom(playerName.trim(), roomCode.toUpperCase());
   };
 
   return (

@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { PhaseEvent } from '../../types';
 
+const EVENT_NAMES: Record<string, string> = {
+  harvest: '豊作',
+  contest: '争奪戦',
+  storm: '嵐',
+  trade: '交換',
+  peace: '平和協定',
+};
+
 const EVENT_ICONS: Record<string, string> = {
   harvest: '🌿',
   contest: '⚔️',
@@ -57,7 +65,7 @@ export function PhaseEventModal({ event, onClose }: PhaseEventModalProps) {
         <div className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">
           フェーズイベント
         </div>
-        <h2 className="text-2xl font-bold text-amber-900 mb-3">{event.name}</h2>
+        <h2 className="text-2xl font-bold text-amber-900 mb-3">{EVENT_NAMES[event.type] ?? event.type}</h2>
         <p className="text-amber-700 text-sm leading-relaxed">{event.description}</p>
         <p className="text-xs text-gray-400 mt-4">クリックで閉じる</p>
       </div>
